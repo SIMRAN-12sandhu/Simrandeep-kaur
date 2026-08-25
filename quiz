@@ -1,0 +1,175 @@
+import sqlite3
+
+# Connect to database
+conn = sqlite3.connect("quiz.db")
+cursor = conn.cursor()
+
+# Create questions table
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    question TEXT NOT NULL,
+    option_a TEXT NOT NULL,
+    option_b TEXT NOT NULL,
+    option_c TEXT NOT NULL,
+    option_d TEXT NOT NULL,
+    answer TEXT NOT NULL
+)
+""")
+
+conn.commit()
+
+
+# Add question
+def add_question():
+    question = input("Enter Question: ")
+    option_a = input("Enter Option A: ")
+    option_b = input("Enter Option B: ")
+    option_c = input("Enter Option C: ")
+    option_d = input("Enter Option D: ")
+
+    while True:
+        answer = input("Enter Correct Answer (A/B/C/D): ").upper()
+
+        if answer in ["A", "B", "C", "D"]:
+            break
+
+        print("Please enter A, B, C or D.")
+
+    cursor.execute("""
+    INSERT INTO questions
+    (question, option_a, option_b, option_c, option_d, answer)
+    VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        question,
+        option_a,
+        option_b,
+        option_c,
+        option_d,
+        answer
+    ))
+
+    conn.commit()
+
+    print("Question added successfully!")
+
+
+# View questions
+def view_questions():
+    cursor.execute("SELECT * FROM questions")
+    questions = cursor.fetchall()
+
+    if not questions:
+        print("No questions available.")
+        return
+
+    print("\n========== QUESTIONS ==========")
+
+    for q in questions:
+        print(f"\nID: {q[0]}")
+        print(q[1])
+        print("A.", q[2])
+        print("B.", q[3])
+        print("C.", q[4])
+        print("D.", q[5])
+
+
+# Start quiz
+def start_quiz():
+    cursor.execute("SELECT * FROM questions")
+    questions = cursor.fetchall()
+
+    if not questions:
+        print("No questions available.")
+        return
+
+    score = 0
+
+    print("\n==============================")
+    print("        QUIZ STARTED")
+    print("==============================")
+
+    for number, q in enumerate(questions, start=1):
+
+        print(f"\nQuestion {number}: {q[1]}")
+        print("A.", q[2])
+        print("B.", q[3])
+        print("C.", q[4])
+        print("D.", q[5])
+
+        while True:
+            answer = input("Your Answer: ").upper()
+
+            if answer in ["A", "B", "C", "D"]:
+                break
+
+            print("Enter A, B, C or D.")
+
+        if answer == q[6]:
+            print("Correct!")
+            score += 1
+        else:
+            print("Wrong!")
+
+    total = len(questions)
+    percentage = (score / total) * 100
+
+    print("\n==============================")
+    print("         QUIZ RESULT")
+    print("==============================")
+    print("Total Questions:", total)
+    print("Correct Answers:", score)
+    print("Wrong Answers:", total - score)
+    print(f"Percentage: {percentage:.2f}%")
+
+    if percentage >= 80:
+        print("Grade: Excellent")
+
+    elif percentage >= 60:
+        print("Grade: Good")
+
+    elif percentage >= 40:
+        print("Grade: Average")
+
+    else:
+        print("Grade: Needs Improvement")
+
+
+# Main menu
+def main():
+
+    while True:
+
+        print("\n================================")
+        print("       QUIZ MANAGEMENT SYSTEM")
+        print("================================")
+        print("1. Add Question")
+        print("2. View Questions")
+        print("3. Start Quiz")
+        print("4. Exit")
+        print("================================")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            add_question()
+
+        elif choice == "2":
+            view_questions()
+
+        elif choice == "3":
+            start_quiz()
+
+        elif choice == "4":
+            print("Thank you for using Quiz Management System!")
+            break
+
+        else:
+            print("Invalid choice!")
+
+
+if __name__ == "__main__":
+    main()
+
+# Close database
+conn.close()
